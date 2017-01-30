@@ -113,7 +113,7 @@ function coerceRef(current: ?Fiber, element: ReactElement) {
   return mixedRef;
 }
 
-function throwOnInvalidObjectType(newChild : Object) {
+function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
   const childrenString = String(newChild);
   let addendum = '';
   if (__DEV__) {
@@ -126,9 +126,9 @@ function throwOnInvalidObjectType(newChild : Object) {
         ' It looks like you\'re using an element created by a different ' +
         'version of React. Make sure to use only one copy of React.';
     }
-    if (ReactCurrentOwner.current) {
-      const owner : Fiber = (ReactCurrentOwner.current : any);
-      let name = getComponentName(owner);
+    const owner = ReactCurrentOwner.owner || returnFiber._debugOwner;
+    if (owner && typeof owner.tag === 'number') {
+      const name = getComponentName((owner : any));
       if (name) {
         addendum += ' Check the render method of `' + name + '`.';
       }
@@ -456,7 +456,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         return created;
       }
 
-      throwOnInvalidObjectType(newChild);
+      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     return null;
@@ -521,7 +521,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         return updateFragment(returnFiber, oldFiber, newChild, priority);
       }
 
-      throwOnInvalidObjectType(newChild);
+      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     return null;
@@ -578,7 +578,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         return updateFragment(returnFiber, matchedFiber, newChild, priority);
       }
 
-      throwOnInvalidObjectType(newChild);
+      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     return null;
@@ -1244,7 +1244,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
 
     if (isObject) {
-      throwOnInvalidObjectType(newChild);
+      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (!disableNewFiberFeatures && typeof newChild === 'undefined') {
